@@ -1,0 +1,129 @@
+---
+title: "IndProject"
+author: "Taylor"
+date: "11/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Install and load all packages
+```{r}
+library(ggplot2)
+library(ggthemes)
+library(GGally)
+library(caret)
+```
+
+```{r}
+#read in combined data
+combo<-read.csv("CombinedData.csv")
+as.numeric(combo$Size)
+#bulk<-read.csv("bulk.csv")
+bulk2<-read.csv("bulk2.csv")
+plot(bulk2$AvgBulk~bulk2$Conc) #right one
+plot(bulk2$SS1.2~bulk2$Conc)
+
+# Simple linear with girth
+fit_pred1 <- lm(Conc~AvgBulk,bulk2)
+plot(fit_pred1)
+#Check the model fit
+plot(bulk2$AvgBulk~bulk2$Conc)
+
+
+```
+##Attempt to plot more lines in one plot
+```{r}
+xdata<-c(bulk2$Conc)
+y1<-c(bulk2$AvgBulk)
+y2<-c(bulk2$SS1.2)
+y3<-c(bulk2$SS1.2_4)
+y4<-c(bulk2$SS1.4_6)
+
+#plot first curve
+plot(xdata,y1,type="o",col="blue",pch="o",lty=1,ylim=c(0,1002),main="SS1 particle sizes vs Standard",xlab="Initial P concentration (mg/L", ylab="P sorbed onto solid (mg/L)")
+
+legend(1,1000,legend=c("SS Bulk", "SS1 <2", "SS1 2-4", "SS1 4-6.3"),col=c("blue","red","dark red", "green"),lty=1:2,cex=0.8, title="SS size",text.font=4)
+
+
+#add second curve to same plot
+points(xdata,y2,col="red", pch="*")
+lines(xdata,y2,col="red",lty=2)
+
+# Add Third curve to the same plot by calling points() and lines()
+# Use symbol '+' for points.
+ points(xdata, y3, col="dark red",pch="+")
+ lines(xdata, y3, col="dark red", lty=3)
+ 
+ #add 4th curve to same plot
+  points(xdata, y4, col="green",pch="x")
+ lines(xdata, y4, col="green", lty=3)
+ 
+```
+
+```{r}
+#Attempting model
+model.fit<-lm(formula = Psorbed~Type + Size, data=combo)
+summary(model.fit)
+plot(model.fit)
+
+model.fit2<-lm(formula=Psorbed~Size,data=combo)
+summary(model.fit2)
+plot(model.fit2)
+
+model.fit3<-lm(formula=Premoval~Size,data=combo)
+summary(model.fit3)
+
+model.fit7<-glm(formula = Psorbed~Type + Size, data=combo, family=poisson(link="log"))
+summary(model.fit7)
+
+model.fit8<-glm(formula=Psorbed~Size,data=combo,family=poisson(link="log"))
+summary(model.fit8)
+
+model.fit9<-glm(formula=Premoval~Size,data=combo,family=poisson(link="log"))
+summary(model.fit9)
+
+
+```
+#Model with elements
+```{r}
+model.fit4<-lm(formula=Psorbed~FeTot,data=combo)
+summary(model.fit4)
+
+model.fit5<-lm(formula=Psorbed~CaTot,data=combo)
+summary(model.fit5)
+
+model.fit6<-lm(formula=Psorbed~CaWS,data=combo)
+summary(model.fit6)
+
+model.fit20<-lm(formula=Size~CaWS + CaTot + MgTot + MgWS,data=combo)
+summary(model.fit20)
+
+model.fit21<-lm(formula=Psorbed~CaWS + CaTot + MgTot + MgWS,data=combo)
+summary(model.fit21)
+```
+
+
+Below this is uncertain/junk
+## Including Plots
+
+```{r}
+comp<-read.csv("composition.csv")
+glm(formula = Premoval~FeTot, data=comp)
+fit_int <- glm(Psorbed~1, data=combo)
+fit_full <- glm(Psorbed~., data=combo)
+#step(comp,scope = list(upper = formula(fit_full), lower = formula(fit_int)), direction = 'forward')
+
+step(fit_int,scope = fit_full, direction = 'forward')
+
+#JUNK
+#attempt this
+model.fit<-glm(Psorbed~CaTot+MgTot+CaWS+MgWS, data= combo, family = poisson(link="log"))
+summary(model.fit)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
