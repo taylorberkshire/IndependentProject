@@ -1,129 +1,158 @@
 ---
 title: "IndProject"
-author: "Taylor"
+author: "Taylor Berkshire"
 date: "11/1/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE, warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-Install and load all packages
-```{r}
+##Install and load all packages
+```{r, warnings=FALSE}
 library(ggplot2)
 library(ggthemes)
 library(GGally)
 library(caret)
+library(MASS)
 ```
 
+##Data files
 ```{r}
 #read in combined data
 combo<-read.csv("CombinedData.csv")
-as.numeric(combo$Size)
-#bulk<-read.csv("bulk.csv")
+str(combo)
+SS<-subset(combo, grepl("SS", combo$Type)) #create SS subset
+AMDR<-subset(combo, grepl("AMDR", combo$Type)) #create AMDR subset
+
 bulk2<-read.csv("bulk2.csv")
 plot(bulk2$AvgBulk~bulk2$Conc) #right one
-plot(bulk2$SS1.2~bulk2$Conc)
-
-# Simple linear with girth
-fit_pred1 <- lm(Conc~AvgBulk,bulk2)
-plot(fit_pred1)
-#Check the model fit
-plot(bulk2$AvgBulk~bulk2$Conc)
-
-
 ```
-##Attempt to plot more lines in one plot
+
+##Plot P removal for SS1
 ```{r}
 xdata<-c(bulk2$Conc)
-y1<-c(bulk2$AvgBulk)
-y2<-c(bulk2$SS1.2)
-y3<-c(bulk2$SS1.2_4)
-y4<-c(bulk2$SS1.4_6)
+y1.avg<-c(bulk2$AvgBulk)
+y1.2<-c(bulk2$SS1.2)
+y1.4<-c(bulk2$SS1.2_4)
+y1.6<-c(bulk2$SS1.4_6)
 
 #plot first curve
-plot(xdata,y1,type="o",col="blue",pch="o",lty=1,ylim=c(0,1002),main="SS1 particle sizes vs Standard",xlab="Initial P concentration (mg/L", ylab="P sorbed onto solid (mg/L)")
+plot(xdata,y1.avg,type="o",col="blue",pch="o",lty=1,ylim=c(0,1002),main="SS1 particle sizes vs Standard",xlab="Initial P concentration (mg/L)", ylab="P sorbed onto solid (mg/L)")
 
-legend(1,1000,legend=c("SS Bulk", "SS1 <2", "SS1 2-4", "SS1 4-6.3"),col=c("blue","red","dark red", "green"),lty=1:2,cex=0.8, title="SS size",text.font=4)
+legend(1,1000,legend=c("SS Standard", "SS1 <2", "SS1 2-4", "SS1 4-6.3"),col=c("blue","red","dark red", "green"),lty=1:2,cex=0.8, title="SS size",text.font=4)
 
 
 #add second curve to same plot
-points(xdata,y2,col="red", pch="*")
-lines(xdata,y2,col="red",lty=2)
+points(xdata,y1.2,col="red", pch="*")
+lines(xdata,y1.2,col="red",lty=2)
 
 # Add Third curve to the same plot by calling points() and lines()
 # Use symbol '+' for points.
- points(xdata, y3, col="dark red",pch="+")
- lines(xdata, y3, col="dark red", lty=3)
+ points(xdata, y1.4, col="dark red",pch="+")
+ lines(xdata, y1.4, col="dark red", lty=3)
  
  #add 4th curve to same plot
-  points(xdata, y4, col="green",pch="x")
- lines(xdata, y4, col="green", lty=3)
+  points(xdata, y1.6, col="green",pch="x")
+ lines(xdata, y1.6, col="green", lty=3)
  
 ```
 
+##Plot graph for SS2
 ```{r}
-#Attempting model
-model.fit<-lm(formula = Psorbed~Type + Size, data=combo)
-summary(model.fit)
-plot(model.fit)
+xdata<-c(bulk2$Conc)
+y1.avg<-c(bulk2$AvgBulk)
+y2.2<-c(bulk2$SS2.2)
+y2.4<-c(bulk2$SS2.2_4)
+y2.6<-c(bulk2$SS2.4_6)
+y2.8<-c(bulk2$SS2.6_8)
+y2.10<-c(bulk2$SS2.8_10)
 
-model.fit2<-lm(formula=Psorbed~Size,data=combo)
-summary(model.fit2)
-plot(model.fit2)
+#plot first curve
+plot(xdata,y1.avg,type="o",col="blue",pch="o",lty=1,ylim=c(0,1002),main="SS2 particle sizes vs Standard",xlab="Initial P concentration (mg/L", ylab="P sorbed onto solid (mg/L)")
 
-model.fit3<-lm(formula=Premoval~Size,data=combo)
-summary(model.fit3)
-
-model.fit7<-glm(formula = Psorbed~Type + Size, data=combo, family=poisson(link="log"))
-summary(model.fit7)
-
-model.fit8<-glm(formula=Psorbed~Size,data=combo,family=poisson(link="log"))
-summary(model.fit8)
-
-model.fit9<-glm(formula=Premoval~Size,data=combo,family=poisson(link="log"))
-summary(model.fit9)
+legend(1,1000,legend=c("SS Standard", "SS2 <2", "SS2 2-4", "SS2 4-6.3", "SS2 6.3-8", "SS2 8-10"),col=c("blue","red","yellow", "green","purple","orange"),lty=1:2,cex=0.8, title="SS size",text.font=4)
 
 
-```
-#Model with elements
-```{r}
-model.fit4<-lm(formula=Psorbed~FeTot,data=combo)
-summary(model.fit4)
+#add second curve to same plot
+points(xdata,y2.2,col="red", pch="*")
+lines(xdata,y2.2,col="red",lty=2)
 
-model.fit5<-lm(formula=Psorbed~CaTot,data=combo)
-summary(model.fit5)
-
-model.fit6<-lm(formula=Psorbed~CaWS,data=combo)
-summary(model.fit6)
-
-model.fit20<-lm(formula=Size~CaWS + CaTot + MgTot + MgWS,data=combo)
-summary(model.fit20)
-
-model.fit21<-lm(formula=Psorbed~CaWS + CaTot + MgTot + MgWS,data=combo)
-summary(model.fit21)
+# Add Third curve to the same plot by calling points() and lines()
+# Use symbol '+' for points.
+ points(xdata, y2.4, col="yellow",pch="+")
+ lines(xdata, y2.4, col="yellow", lty=3)
+ 
+ #add 4th curve to same plot
+  points(xdata, y2.6, col="green",pch="x")
+ lines(xdata, y2.6, col="green", lty=3)
+ 
+ #add 5th curve to same plot
+  points(xdata, y2.8, col="purple",pch="x")
+ lines(xdata, y2.8, col="purple", lty=3)
+ 
+ #add 6th curve to same plot
+  points(xdata, y2.10, col="orange",pch="x")
+ lines(xdata, y2.10, col="orange", lty=3)
+ 
 ```
 
-
-Below this is uncertain/junk
-## Including Plots
-
+##Modeling PSM with particle size and P removal
 ```{r}
-comp<-read.csv("composition.csv")
-glm(formula = Premoval~FeTot, data=comp)
-fit_int <- glm(Psorbed~1, data=combo)
-fit_full <- glm(Psorbed~., data=combo)
-#step(comp,scope = list(upper = formula(fit_full), lower = formula(fit_int)), direction = 'forward')
+#Model Psorption with particle size, initial concentration, and source
+#Is size significant? Is source significant?
+fit.size.inconc.source<-lm(Psorbed~Type +Size+Init_Conc+Source, data=combo)
+summary(fit.size.inconc.source) #size large, init_conc, and source sig at 0.05, type not sig
+aov<-aov(Psorbed~Type +Size+Init_Conc+Source, data=combo)
+summary(aov) #Everything significant at 0.05
 
-step(fit_int,scope = fit_full, direction = 'forward')
+#What if look at SS and AMDR separately
+fit.size.inconc.source.SS<-lm(Psorbed~Size+Init_Conc+Source, data=SS)
+summary(fit.size.inconc.source.SS) #size large, init_conc, and source sig at 0.05
+aov<-aov(Psorbed~Size+Init_Conc+Source, data=SS)
+summary(aov) #Everything significant at 0.05
 
-#JUNK
-#attempt this
-model.fit<-glm(Psorbed~CaTot+MgTot+CaWS+MgWS, data= combo, family = poisson(link="log"))
-summary(model.fit)
+fit.size.inconc.source.AMDR<-lm(Psorbed~Init_Conc+Source, data=AMDR)
+summary(fit.size.inconc.source.AMDR) #init_conc sig at 0.05, but not source
+aov<-aov(Psorbed~Init_Conc+Source, data=AMDR)
+summary(aov) #Init_conc significant at 0.05
+
+#stepwise to see what best model for P removal is
+fit_int.1 <- lm(Psorbed~1, combo)
+fit_full.1 <- lm(Psorbed ~ Type + Size + Init_Conc + Premoval + Source, data = combo)
+step<-step(fit_int.1,scope = list(upper = formula(fit_full.1), lower = formula(fit_int.1)), direction = 'both')
+#no surprise, it is initial concentration and P removal
+```
+##Trying some prediction stuff
+```{r}
+predict(fit.size.inconc.source)
+```
+##Modeling elemental effects
+```{r}
+#Entire model
+fit_int.full <- lm(Psorbed~1, combo)
+fit_full.full <- lm(Psorbed ~ Type + Init_Conc + Premoval + Source + Size + FeTot + 
+    CaTot + MgTot + AlTot + CaWS+ MgWS+AlAO+FeAO+AlCBD+FeCBD, data = combo)
+step<-step(fit_int.full,scope = list(upper = formula(fit_full.full), lower = formula(fit_int.full)), direction = 'both')
+#from the whole gambit- Psorbed~ Init_Conc + Premoval + AlTot + MgWS + Source
+
+#Just elemental composition for all 
+fit_int.el <- lm(Psorbed~1, combo)
+fit_full.el <- lm(Psorbed ~ Init_Conc + Premoval+FeTot + 
+    CaTot + MgTot + AlTot + CaWS+ MgWS+AlAO+FeAO+AlCBD+FeCBD, data = combo)
+step<-step(fit_int.el,scope = list(upper = formula(fit_full.el), lower = formula(fit_int.el)), direction = 'both')
+#With just elemental composition, Psorbed ~ Init_Conc + Premoval + MgWS + CaTot + FeCBD
+
+#Just SS
+fit_int.ss <- lm(Psorbed~1, SS)
+fit_full.ss <- lm(Psorbed ~ Source + Init_Conc + Premoval + Size + FeTot + 
+    CaTot + MgTot + AlTot + CaWS+ MgWS+AlAO+FeAO+AlCBD+FeCBD, data = SS)
+step<-step(fit_int.ss,scope = list(upper = formula(fit_full.ss), lower = formula(fit_int.ss)), direction = 'both')
+#just SS, Psorbed ~ Init_Conc + Premoval + CaTot + MgWS + MgTot
+
+#Only AMDR
+fit_int.amdr <- lm(Psorbed~1, AMDR)
+fit_full.amdr <- lm(Psorbed ~ Source + Init_Conc + Premoval + FeTot + 
+    CaTot + MgTot + AlTot + CaWS+ MgWS+AlAO+FeAO+AlCBD+FeCBD, data = SS)
+step<-step(fit_int.amdr,scope = list(upper = formula(fit_full.amdr), lower = formula(fit_int.amdr)), direction = 'both')
+#AMDR is Psorbed ~ Init_Conc + Premoval
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
