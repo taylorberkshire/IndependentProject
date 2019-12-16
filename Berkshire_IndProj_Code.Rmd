@@ -12,6 +12,7 @@ library(ggthemes)
 library(GGally)
 library(caret)
 library(MASS)
+library(tidyverse)
 ```
 
 ##Data files
@@ -21,9 +22,8 @@ combo<-read.csv("CombinedData.csv")
 str(combo)
 SS<-subset(combo, grepl("SS", combo$Type)) #create SS subset
 AMDR<-subset(combo, grepl("AMDR", combo$Type)) #create AMDR subset
-
 bulk2<-read.csv("bulk2.csv")
-plot(bulk2$AvgBulk~bulk2$Conc) #right one
+
 ```
 
 ##Plot P removal for SS1
@@ -34,6 +34,7 @@ y1.2<-c(bulk2$SS1.2)
 y1.4<-c(bulk2$SS1.2_4)
 y1.6<-c(bulk2$SS1.4_6)
 
+png(filename="SS1.png")
 #plot first curve
 plot(xdata,y1.avg,type="o",col="blue",pch="o",lty=1,ylim=c(0,1002),main="SS1 particle sizes vs Standard",xlab="Initial P concentration (mg/L)", ylab="P sorbed onto solid (mg/L)")
 
@@ -53,6 +54,7 @@ lines(xdata,y1.2,col="red",lty=2)
   points(xdata, y1.6, col="green",pch="x")
  lines(xdata, y1.6, col="green", lty=3)
  
+ dev.off()
 ```
 
 ##Plot graph for SS2
@@ -65,6 +67,7 @@ y2.6<-c(bulk2$SS2.4_6)
 y2.8<-c(bulk2$SS2.6_8)
 y2.10<-c(bulk2$SS2.8_10)
 
+png(filename="SS2.png")
 #plot first curve
 plot(xdata,y1.avg,type="o",col="blue",pch="o",lty=1,ylim=c(0,1002),main="SS2 particle sizes vs Standard",xlab="Initial P concentration (mg/L", ylab="P sorbed onto solid (mg/L)")
 
@@ -92,6 +95,7 @@ lines(xdata,y2.2,col="red",lty=2)
   points(xdata, y2.10, col="orange",pch="x")
  lines(xdata, y2.10, col="orange", lty=3)
  
+ dev.off()
 ```
 
 ##Modeling PSM with particle size and P removal
@@ -114,18 +118,24 @@ summary(fit.size.inconc.source.AMDR) #init_conc sig at 0.05, but not source
 aov<-aov(Psorbed~Init_Conc+Source, data=AMDR)
 summary(aov) #Init_conc significant at 0.05
 
-#stepwise to see what best model for P removal is
+#stepwise to see what best model for P sorption is
 fit_int.1 <- lm(Psorbed~1, combo)
 fit_full.1 <- lm(Psorbed ~ Type + Size + Init_Conc + Premoval + Source, data = combo)
 step<-step(fit_int.1,scope = list(upper = formula(fit_full.1), lower = formula(fit_int.1)), direction = 'both')
 #no surprise, it is initial concentration and P removal
 ```
-##Trying some prediction stuff
-```{r}
-predict(fit.size.inconc.source)
-```
+
 ##Modeling elemental effects
 ```{r}
+
+#Model Psorption with particle size, initial concentration, and source
+#Is size significant? Is source significant?
+fit.all<-lm(Psorbed~Type +Size+Init_Conc+Source + FeTot + 
+    CaTot + MgTot + AlTot + CaWS+ MgWS+AlAO+FeAO+AlCBD+FeCBD, data=combo)
+summary(fit.all) #only brings rsquared up to 91.68
+aov.all<-aov(fit.all)
+summary(aov.all)
+
 #Entire model
 fit_int.full <- lm(Psorbed~1, combo)
 fit_full.full <- lm(Psorbed ~ Type + Init_Conc + Premoval + Source + Size + FeTot + 
@@ -154,5 +164,6 @@ fit_full.amdr <- lm(Psorbed ~ Source + Init_Conc + Premoval + FeTot +
 step<-step(fit_int.amdr,scope = list(upper = formula(fit_full.amdr), lower = formula(fit_int.amdr)), direction = 'both')
 #AMDR is Psorbed ~ Init_Conc + Premoval
 ```
+
 
 
